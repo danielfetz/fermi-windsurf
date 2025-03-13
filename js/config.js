@@ -2,105 +2,129 @@
 const SUPABASE_URL = '%SUPABASE_URL%';
 const SUPABASE_KEY = '%SUPABASE_KEY%';
 
-// UI Elements
-const ELEMENTS = {
-    // Auth elements
-    authContainer: document.getElementById('auth-container'),
-    loginForm: document.getElementById('login-form'),
-    registerForm: document.getElementById('register-form'),
-    loginBtn: document.getElementById('login-btn'),
-    registerBtn: document.getElementById('register-btn'),
-    
-    // Lobby elements
-    lobbyContainer: document.getElementById('lobby-container'),
-    userDisplayName: document.getElementById('user-display-name'),
-    logoutBtn: document.getElementById('logout-btn'),
-    gamesList: document.getElementById('games-list'),
-    createGameBtn: document.getElementById('create-game-btn'),
-    joinGameByInviteBtn: document.getElementById('join-game-by-invite-btn'),
-    
-    // Create game modal
-    createGameModal: document.getElementById('create-game-modal'),
-    gameName: document.getElementById('game-name'),
-    startingChips: document.getElementById('starting-chips'),
-    minPlayers: document.getElementById('min-players'),
-    maxPlayers: document.getElementById('max-players'),
-    guessTime: document.getElementById('guess-time'),
-    enableMetaGame: document.getElementById('enable-meta-game'),
-    numQuestions: document.getElementById('num-questions'),
-    confirmCreateGame: document.getElementById('confirm-create-game'),
-    cancelCreateGame: document.getElementById('cancel-create-game'),
-    
-    // Join game modal
-    joinGameModal: document.getElementById('join-game-modal'),
-    inviteCode: document.getElementById('invite-code'),
-    guestLoginContainer: document.getElementById('guest-login-container'),
-    guestUsername: document.getElementById('guest-username'),
-    confirmJoinByInvite: document.getElementById('confirm-join-by-invite'),
-    cancelJoinByInvite: document.getElementById('cancel-join-by-invite'),
-    
-    // Game room elements
-    gameRoomContainer: document.getElementById('game-room-container'),
-    gameRoomName: document.getElementById('game-room-name'),
-    gameStatus: document.getElementById('game-status'),
-    leaveGameBtn: document.getElementById('leave-game-btn'),
-    playersList: document.getElementById('players-list'),
-    
-    // Game states
-    waitingScreen: document.getElementById('waiting-screen'),
-    currentPlayers: document.getElementById('current-players'),
-    minRequiredPlayers: document.getElementById('min-required-players'),
-    startGameBtn: document.getElementById('start-game-btn'),
-    
-    questionPhase: document.getElementById('question-phase'),
-    currentQuestionNum: document.getElementById('current-question-num'),
-    totalQuestions: document.getElementById('total-questions'),
-    timer: document.getElementById('timer'),
-    currentQuestion: document.getElementById('current-question'),
-    lowerBound: document.getElementById('lower-bound'),
-    upperBound: document.getElementById('upper-bound'),
-    submitGuessBtn: document.getElementById('submit-guess-btn'),
-    
-    metaGamePrediction: document.getElementById('meta-game-prediction'),
-    winnerPrediction: document.getElementById('winner-prediction'),
-    submitPredictionBtn: document.getElementById('submit-prediction-btn'),
-    
-    bettingPhase: document.getElementById('betting-phase'),
-    bettingRound: document.getElementById('betting-round'),
-    potAmount: document.getElementById('pot-amount'),
-    hint1: document.getElementById('hint-1'),
-    hint1Text: document.getElementById('hint-1-text'),
-    hint2: document.getElementById('hint-2'),
-    hint2Text: document.getElementById('hint-2-text'),
-    guessesList: document.getElementById('guesses-list'),
-    currentBet: document.getElementById('current-bet'),
-    playerChips: document.getElementById('player-chips'),
-    foldBtn: document.getElementById('fold-btn'),
-    callBtn: document.getElementById('call-btn'),
-    raiseSlider: document.getElementById('raise-slider'),
-    raiseAmount: document.getElementById('raise-amount'),
-    raiseBtn: document.getElementById('raise-btn'),
-    
-    revealPhase: document.getElementById('reveal-phase'),
-    correctAnswer: document.getElementById('correct-answer'),
-    winnerName: document.getElementById('winner-name'),
-    winningRange: document.getElementById('winning-range'),
-    allGuessesList: document.getElementById('all-guesses-list'),
-    nextQuestionBtn: document.getElementById('next-question-btn'),
-    
-    gameOver: document.getElementById('game-over'),
-    finalStandingsList: document.getElementById('final-standings-list'),
-    returnToLobbyBtn: document.getElementById('return-to-lobby-btn'),
-    playAgainBtn: document.getElementById('play-again-btn'),
-    
-    // Chat elements
-    chatMessages: document.getElementById('chat-messages'),
-    chatInput: document.getElementById('chat-input'),
-    sendChatBtn: document.getElementById('send-chat-btn')
-};
+// Ensure Supabase is available globally 
+if (typeof supabase === 'undefined' && typeof window.supabase !== 'undefined') {
+    window.supabase = window.supabase;
+} else if (typeof supabase === 'undefined') {
+    console.error('Supabase SDK not loaded! Please include the Supabase script in the HTML.');
+    // Create a dummy client to prevent errors
+    window.supabase = {
+        createClient: function() {
+            return {
+                auth: {
+                    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+                }
+            };
+        }
+    };
+}
 
 // Initialize Supabase client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// UI Elements will be initialized after DOM is loaded
+let ELEMENTS = {};
+
+// Initialize UI elements when DOM is ready
+function initUIElements() {
+    ELEMENTS = {
+        // Auth elements
+        authContainer: document.getElementById('auth-container'),
+        loginForm: document.getElementById('login-form'),
+        registerForm: document.getElementById('register-form'),
+        loginBtn: document.getElementById('login-btn'),
+        registerBtn: document.getElementById('register-btn'),
+        guestBtn: document.getElementById('guest-btn'),
+        logoutBtn: document.getElementById('logout-btn'),
+        userDisplayName: document.getElementById('user-display-name'),
+        
+        // Lobby elements
+        lobbyContainer: document.getElementById('lobby-container'),
+        createGameBtn: document.getElementById('create-game-btn'),
+        refreshGamesBtn: document.getElementById('refresh-games-btn'),
+        gamesList: document.getElementById('games-list'),
+        joinGameByCodeBtn: document.getElementById('join-game-by-code-btn'),
+        
+        // Create game modal
+        createGameModal: document.getElementById('create-game-modal'),
+        closeCreateGameBtn: document.querySelector('#create-game-modal .close-modal-btn'),
+        createGameForm: document.getElementById('create-game-form'),
+        gameNameInput: document.getElementById('game-name'),
+        startingChipsInput: document.getElementById('starting-chips'),
+        minPlayersInput: document.getElementById('min-players'),
+        maxPlayersInput: document.getElementById('max-players'),
+        guessTimeInput: document.getElementById('guess-time'),
+        enableMetaGameInput: document.getElementById('enable-meta-game'),
+        numQuestionsInput: document.getElementById('num-questions'),
+        createGameSubmitBtn: document.getElementById('create-game-submit-btn'),
+        
+        // Join game modal
+        joinGameModal: document.getElementById('join-game-modal'),
+        closeJoinGameBtn: document.querySelector('#join-game-modal .close-modal-btn'),
+        inviteCodeInput: document.getElementById('invite-code'),
+        guestUsernameInput: document.getElementById('guest-username'),
+        joinGameSubmitBtn: document.getElementById('join-game-submit-btn'),
+        
+        // Game room elements
+        gameRoomContainer: document.getElementById('game-room-container'),
+        gameRoomName: document.getElementById('game-room-name'),
+        gameStatus: document.getElementById('game-status'),
+        playersList: document.getElementById('players-list'),
+        leaveGameBtn: document.getElementById('leave-game-btn'),
+        
+        // Game states
+        waitingScreen: document.getElementById('waiting-screen'),
+        currentPlayers: document.getElementById('current-players'),
+        minRequiredPlayers: document.getElementById('min-required-players'),
+        startGameBtn: document.getElementById('start-game-btn'),
+        
+        // Question phase
+        questionPhase: document.getElementById('question-phase'),
+        questionText: document.getElementById('question-text'),
+        questionCounterText: document.getElementById('question-counter-text'),
+        lowerBoundInput: document.getElementById('lower-bound'),
+        upperBoundInput: document.getElementById('upper-bound'),
+        submitGuessBtn: document.getElementById('submit-guess-btn'),
+        questionTimer: document.getElementById('question-timer'),
+        
+        // Betting phases
+        bettingPhase1: document.getElementById('betting-phase-1'),
+        bettingPhase2: document.getElementById('betting-phase-2'),
+        bettingPhase3: document.getElementById('betting-phase-3'),
+        bettingPlayersList: document.getElementById('betting-players-list'),
+        hintText1: document.getElementById('hint-text-1'),
+        hintText2: document.getElementById('hint-text-2'),
+        chipCount: document.getElementById('chip-count'),
+        betAmount: document.getElementById('bet-amount'),
+        betSlider: document.getElementById('bet-slider'),
+        callBtn: document.getElementById('call-btn'),
+        raiseBtn: document.getElementById('raise-btn'),
+        allInBtn: document.getElementById('all-in-btn'),
+        foldBtn: document.getElementById('fold-btn'),
+        betTimer: document.getElementById('bet-timer'),
+        
+        // Reveal phase
+        revealPhase: document.getElementById('reveal-phase'),
+        correctAnswer: document.getElementById('correct-answer'),
+        revealPlayersList: document.getElementById('reveal-players-list'),
+        
+        // Game over
+        gameOver: document.getElementById('game-over'),
+        gameOverTitle: document.getElementById('game-over-title'),
+        finalRankings: document.getElementById('final-rankings'),
+        returnToLobbyBtn: document.getElementById('return-to-lobby-btn'),
+        
+        // Chat
+        chatMessages: document.getElementById('chat-messages'),
+        chatInput: document.getElementById('chat-input'),
+        sendChatBtn: document.getElementById('send-chat-btn')
+    };
+    
+    window.ELEMENTS = ELEMENTS;
+    
+    // Dispatch an event to notify other modules that ELEMENTS are ready
+    window.dispatchEvent(new Event('ELEMENTS_READY'));
+}
 
 // Game configuration defaults
 const DEFAULT_GAME_CONFIG = {
@@ -133,3 +157,15 @@ const PLAYER_STATES = {
     FOLDED: 'folded',
     BANKRUPT: 'bankrupt'
 };
+
+// Initialize elements when DOM is loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUIElements);
+} else {
+    initUIElements();
+}
+
+// Create an event that other scripts can wait for
+document.addEventListener('DOMContentLoaded', function() {
+    window.dispatchEvent(new Event('CONFIG_LOADED'));
+});

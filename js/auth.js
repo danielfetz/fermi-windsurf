@@ -4,6 +4,13 @@
 const Auth = (function() {
     // Current user data
     let currentUser = null;
+    let elementsInitialized = false;
+
+    // Wait for ELEMENTS to be defined
+    window.addEventListener('ELEMENTS_READY', function() {
+        elementsInitialized = true;
+        initEventListeners();
+    });
 
     // Event handlers
     const onAuthStateChange = (callback) => {
@@ -19,34 +26,18 @@ const Auth = (function() {
                     currentUser = {
                         id: session.user.id,
                         email: session.user.email,
-                        username: profile?.username || session.user.email,
-                        chips: profile?.chips || 0,
-                        isGuest: profile?.isGuest || false
+                        username: profile ? profile.username : session.user.email,
+                        isGuest: profile ? profile.is_guest : false
                     };
-                    callback(currentUser);
+                    
+                    if (callback) callback(currentUser);
                 });
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
-                callback(null);
+                if (callback) callback(null);
             }
         });
-
-        // Check if already logged in
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                getUserProfile(session.user.id).then(profile => {
-                    currentUser = {
-                        id: session.user.id,
-                        email: session.user.email,
-                        username: profile?.username || session.user.email,
-                        chips: profile?.chips || 0,
-                        isGuest: profile?.isGuest || false
-                    };
-                    callback(currentUser);
-                });
-            }
-        });
-
+        
         return authListener;
     };
 
@@ -202,27 +193,24 @@ const Auth = (function() {
         return !!currentUser;
     };
 
-    // Initialize DOM event listeners when document is ready
+    // Initialize DOM event listeners
     const initEventListeners = () => {
-        if (!ELEMENTS) {
-            console.error('ELEMENTS not defined. Make sure config.js is loaded before auth.js');
+        if (!window.ELEMENTS) {
+            console.error('ELEMENTS not defined. Unable to initialize event listeners.');
             return;
         }
         
-        // Tab switching
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabName = btn.dataset.tab;
+        // Auth tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
                 
-                // Update active tab button
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                // Update active tab
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
                 
-                // Show selected tab content
-                tabContents.forEach(content => {
+                // Show active content
+                document.querySelectorAll('.auth-content').forEach(content => {
                     content.classList.remove('active');
                     if (content.id === `${tabName}-form`) {
                         content.classList.add('active');
@@ -232,100 +220,100 @@ const Auth = (function() {
         });
         
         // Register form submission
-        ELEMENTS.registerBtn.addEventListener('click', async () => {
-            const username = document.getElementById('register-username').value.trim();
-            const email = document.getElementById('register-email').value.trim();
-            const password = document.getElementById('register-password').value;
-            
-            if (!username || !email || !password) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            ELEMENTS.registerBtn.disabled = true;
-            ELEMENTS.registerBtn.textContent = 'Registering...';
-            
-            const result = await Auth.register(email, password, username);
-            
-            ELEMENTS.registerBtn.disabled = false;
-            ELEMENTS.registerBtn.textContent = 'Register';
-            
-            if (result.success) {
-                // Registration successful, switch to login tab if not auto-logged in
-                if (!Auth.isAuthenticated()) {
-                    alert('Registration successful! Please check your email to verify your account before logging in.');
-                    document.querySelector('.tab-btn[data-tab="login"]').click();
+        if (window.ELEMENTS.registerBtn) {
+            window.ELEMENTS.registerBtn.addEventListener('click', async () => {
+                const username = document.getElementById('register-username').value.trim();
+                const email = document.getElementById('register-email').value.trim();
+                const password = document.getElementById('register-password').value;
+                
+                if (!username || !email || !password) {
+                    alert('Please fill in all fields');
+                    return;
                 }
-            } else {
-                alert(`Registration failed: ${result.error}`);
-            }
-        });
+                
+                window.ELEMENTS.registerBtn.disabled = true;
+                window.ELEMENTS.registerBtn.textContent = 'Registering...';
+                
+                const result = await Auth.register(email, password, username);
+                
+                window.ELEMENTS.registerBtn.disabled = false;
+                window.ELEMENTS.registerBtn.textContent = 'Register';
+                
+                if (result.success) {
+                    // Registration successful, switch to login tab if not auto-logged in
+                    if (!Auth.isAuthenticated()) {
+                        alert('Registration successful! Please check your email to verify your account before logging in.');
+                        document.querySelector('.tab-btn[data-tab="login"]').click();
+                    }
+                } else {
+                    alert(`Registration failed: ${result.error}`);
+                }
+            });
+        }
         
         // Login form submission
-        ELEMENTS.loginBtn.addEventListener('click', async () => {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            
-            if (!email || !password) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            ELEMENTS.loginBtn.disabled = true;
-            ELEMENTS.loginBtn.textContent = 'Logging in...';
-            
-            const result = await Auth.login(email, password);
-            
-            ELEMENTS.loginBtn.disabled = false;
-            ELEMENTS.loginBtn.textContent = 'Login';
-            
-            if (!result.success) {
-                alert(`Login failed: ${result.error}`);
-            }
-        });
+        if (window.ELEMENTS.loginBtn) {
+            window.ELEMENTS.loginBtn.addEventListener('click', async () => {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+                
+                if (!email || !password) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                window.ELEMENTS.loginBtn.disabled = true;
+                window.ELEMENTS.loginBtn.textContent = 'Logging in...';
+                
+                const result = await Auth.login(email, password);
+                
+                window.ELEMENTS.loginBtn.disabled = false;
+                window.ELEMENTS.loginBtn.textContent = 'Login';
+                
+                if (!result.success) {
+                    alert(`Login failed: ${result.error}`);
+                }
+            });
+        }
         
         // Guest user form submission
-        ELEMENTS.guestBtn.addEventListener('click', async () => {
-            const username = document.getElementById('guest-username').value.trim();
-            
-            if (!username) {
-                alert('Please enter a username');
-                return;
-            }
-            
-            ELEMENTS.guestBtn.disabled = true;
-            ELEMENTS.guestBtn.textContent = 'Creating guest account...';
-            
-            const result = await Auth.createGuestUser(username);
-            
-            ELEMENTS.guestBtn.disabled = false;
-            ELEMENTS.guestBtn.textContent = 'Play as Guest';
-            
-            if (result) {
-                // Guest account created, update UI
-                alert(`Guest account created! You can now play as ${result.username}.`);
-                // Update UI to reflect guest user
-            } else {
-                alert('Failed to create guest account. Please try again.');
-            }
-        });
+        if (window.ELEMENTS.guestBtn) {
+            window.ELEMENTS.guestBtn.addEventListener('click', async () => {
+                const username = document.getElementById('guest-username').value.trim();
+                
+                if (!username) {
+                    alert('Please enter a username');
+                    return;
+                }
+                
+                window.ELEMENTS.guestBtn.disabled = true;
+                window.ELEMENTS.guestBtn.textContent = 'Creating guest account...';
+                
+                const result = await Auth.createGuestUser(username);
+                
+                window.ELEMENTS.guestBtn.disabled = false;
+                window.ELEMENTS.guestBtn.textContent = 'Play as Guest';
+                
+                if (result) {
+                    // Guest account created, update UI
+                    alert(`Guest account created! You can now play as ${result.username}.`);
+                } else {
+                    alert('Failed to create guest account. Please try again.');
+                }
+            });
+        }
         
         // Logout button
-        ELEMENTS.logoutBtn.addEventListener('click', async () => {
-            const result = await Auth.logout();
-            
-            if (!result.success) {
-                alert(`Logout failed: ${result.error}`);
-            }
-        });
+        if (window.ELEMENTS.logoutBtn) {
+            window.ELEMENTS.logoutBtn.addEventListener('click', async () => {
+                const result = await Auth.logout();
+                
+                if (!result.success) {
+                    alert(`Logout failed: ${result.error}`);
+                }
+            });
+        }
     };
-    
-    // Initialize event listeners when DOM is loaded
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initEventListeners);
-    } else {
-        initEventListeners();
-    }
 
     // Return public methods
     return {

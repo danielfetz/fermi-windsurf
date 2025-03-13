@@ -1,9 +1,13 @@
 /**
  * Main application initialization
  */
-document.addEventListener('DOMContentLoaded', () => {
+
+// Wait for DOM and other modules to load
+window.addEventListener('ELEMENTS_READY', () => {
     // Check if Supabase is configured
-    if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_KEY === 'YOUR_SUPABASE_PUBLIC_KEY') {
+    if (!SUPABASE_URL || !SUPABASE_KEY || 
+        SUPABASE_URL === '%SUPABASE_URL%' || 
+        SUPABASE_KEY === '%SUPABASE_KEY%') {
         alert('Please configure your Supabase URL and key in js/config.js');
         return;
     }
@@ -17,10 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
             ELEMENTS.gameRoomContainer.classList.add('hidden');
             
             // Update user display name
-            ELEMENTS.userDisplayName.textContent = user.username;
+            if (ELEMENTS.userDisplayName) {
+                ELEMENTS.userDisplayName.textContent = user.username;
+            }
             
-            // Initialize lobby
+            // Initialize the lobby
             Lobby.init();
+            
+            // Check if there's a game ID in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameId = urlParams.get('game');
+            
+            if (gameId) {
+                Lobby.joinGame(gameId);
+            }
         } else {
             // User is logged out
             ELEMENTS.authContainer.classList.remove('hidden');
