@@ -2,42 +2,7 @@
 const SUPABASE_URL = '%SUPABASE_URL%';
 const SUPABASE_KEY = '%SUPABASE_KEY%';
 
-// Initialize Supabase client
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Game configuration defaults
-const DEFAULT_GAME_CONFIG = {
-    startingChips: 1000,
-    minPlayers: 2,
-    maxPlayers: 6,
-    guessTime: 60, // seconds
-    enableMetaGame: false,
-    numQuestions: 5,
-    minRejoinPredictions: 3, // predictions needed to rejoin after bankruptcy
-    minRejoinChips: 50 // chips to give when rejoining after bankruptcy
-};
-
-// Game states
-const GAME_STATES = {
-    WAITING: 'waiting',
-    QUESTION: 'question',
-    BETTING_ROUND_1: 'betting_round_1',
-    HINT_1: 'hint_1',
-    BETTING_ROUND_2: 'betting_round_2',
-    HINT_2: 'hint_2',
-    BETTING_ROUND_3: 'betting_round_3',
-    REVEAL: 'reveal',
-    GAME_OVER: 'game_over'
-};
-
-// Player states
-const PLAYER_STATES = {
-    ACTIVE: 'active',
-    FOLDED: 'folded',
-    BANKRUPT: 'bankrupt'
-};
-
-// Elements that will be reused throughout the application
+// UI Elements
 const ELEMENTS = {
     // Auth elements
     authContainer: document.getElementById('auth-container'),
@@ -132,4 +97,39 @@ const ELEMENTS = {
     chatMessages: document.getElementById('chat-messages'),
     chatInput: document.getElementById('chat-input'),
     sendChatBtn: document.getElementById('send-chat-btn')
+};
+
+// Initialize Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Game configuration defaults
+const DEFAULT_GAME_CONFIG = {
+    startingChips: 1000,
+    minPlayers: 2,
+    maxPlayers: 6,
+    guessTime: 60, // seconds
+    enableMetaGame: false,
+    numQuestions: 5,
+    minRejoinPredictions: 3, // predictions needed to rejoin after bankruptcy
+    minRejoinChips: 50 // chips to give when rejoining after bankruptcy
+};
+
+// Game states
+const GAME_STATES = {
+    WAITING: 'waiting',
+    QUESTION: 'question',
+    BETTING_ROUND_1: 'betting_round_1',
+    HINT_1: 'hint_1',
+    BETTING_ROUND_2: 'betting_round_2',
+    HINT_2: 'hint_2',
+    BETTING_ROUND_3: 'betting_round_3',
+    REVEAL: 'reveal',
+    GAME_OVER: 'game_over'
+};
+
+// Player states
+const PLAYER_STATES = {
+    ACTIVE: 'active',
+    FOLDED: 'folded',
+    BANKRUPT: 'bankrupt'
 };
