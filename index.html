@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fermi Poker</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Supabase JS Client -->
+    <!-- Load Supabase JS Client first -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -307,28 +307,19 @@
         </div>
     </div>
 
-    <!-- Game scripts -->
+    <!-- Game scripts - Order matters! -->
+    <!-- First, load configuration -->
     <script src="js/config.js"></script>
-    <script>
-        // Ensure ELEMENTS are defined before other scripts use them
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Supabase client after page load
-            if (typeof supabase === 'undefined') {
-                // Fallback initialization if the CDN failed
-                console.warn('Supabase not loaded from CDN, attempting fallback');
-                window.supabase = { createClient: function(url, key) {
-                    console.error('Supabase initialization failed. Please check your connection.');
-                    return { auth: { onAuthStateChange: () => ({}) } };
-                }};
-            }
-        });
-    </script>
+    
+    <!-- Then load modules that depend on config.js -->
     <script src="js/auth.js"></script>
+    <script src="js/database.js"></script>
     <script src="js/lobby.js"></script>
     <script src="js/game.js"></script>
-    <script src="js/database.js"></script>
     <script src="js/game_actions.js"></script>
     <script src="js/player_actions.js"></script>
+    
+    <!-- Finally, main.js which orchestrates everything -->
     <script src="js/main.js"></script>
 </body>
 </html>
