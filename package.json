@@ -1,0 +1,11 @@
+{
+  "name": "fermi-poker",
+  "version": "1.0.0",
+  "description": "A multiplayer poker-style game based on Fermi questions and estimation",
+  "main": "index.html",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

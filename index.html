@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fermi Poker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Login/Registration Screen -->
+        <div id="auth-container" class="screen">
+            <div class="auth-card">
+                <h1>Fermi Poker</h1>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="login">Login</button>
+                    <button class="tab-btn" data-tab="register">Register</button>
+                </div>
+                
+                <div id="login-form" class="tab-content active">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="••••••••">
+                    </div>
+                    <button id="login-btn" class="btn primary-btn">Login</button>
+                    <div class="guest-option">
+                        <p>or</p>
+                        <button id="guest-btn" class="btn secondary-btn">Play as Guest</button>
+                    </div>
+                </div>
+                
+                <div id="register-form" class="tab-content">
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" placeholder="Choose a username">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" placeholder="••••••••">
+                    </div>
+                    <button id="register-btn" class="btn primary-btn">Register</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-container" class="screen hidden">
+            <header>
+                <h1>Fermi Poker Lobby</h1>
+                <div class="user-profile">
+                    <span id="user-display-name"></span>
+                    <button id="logout-btn" class="btn small-btn">Logout</button>
+                </div>
+            </header>
+            
+            <div class="lobby-content">
+                <div class="games-list-container">
+                    <div class="section-header">
+                        <h2>Available Games</h2>
+                        <button id="create-game-btn" class="btn primary-btn">Create Game</button>
+                        <button id="join-game-by-invite-btn" class="btn secondary-btn">Join by Invite</button>
+                    </div>
+                    <div id="games-list" class="games-list">
+                        <!-- Games will be populated here -->
+                        <div class="empty-state">No games available. Create one to start playing!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Game Modal -->
+        <div id="create-game-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create New Game</h2>
+                    <button class="close-modal-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="game-name">Game Name</label>
+                        <input type="text" id="game-name" placeholder="My Awesome Game">
+                    </div>
+                    <div class="form-group">
+                        <label for="starting-chips">Starting Chips</label>
+                        <input type="number" id="starting-chips" min="100" value="1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="min-players">Minimum Players</label>
+                        <input type="number" id="min-players" min="2" max="10" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="max-players">Maximum Players</label>
+                        <input type="number" id="max-players" min="2" max="10" value="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="guess-time">Guess Time (seconds)</label>
+                        <input type="number" id="guess-time" min="30" max="300" value="60">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="enable-meta-game">
+                        <label for="enable-meta-game">Enable Meta-Game (Bankrupt Revival)</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="num-questions">Number of Questions per Game</label>
+                        <input type="number" id="num-questions" min="1" max="10" value="5">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-create-game" class="btn secondary-btn">Cancel</button>
+                    <button id="confirm-create-game" class="btn primary-btn">Create Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Join Game Modal -->
+        <div id="join-game-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Join Game by Invite Code</h2>
+                    <button class="close-modal-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="invite-code">Invite Code</label>
+                        <input type="text" id="invite-code" placeholder="Enter 6-character code">
+                    </div>
+                    <div id="guest-login-container" class="form-group hidden">
+                        <label for="guest-username">Guest Username</label>
+                        <input type="text" id="guest-username" placeholder="Choose a username">
+                        <p class="helper-text">You're not signed in. Enter a username to continue as guest.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-join-by-invite" class="btn secondary-btn">Cancel</button>
+                    <button id="confirm-join-by-invite" class="btn primary-btn">Join Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Room Screen -->
+        <div id="game-room-container" class="screen hidden">
+            <header>
+                <div class="game-info">
+                    <h1 id="game-room-name">Game Name</h1>
+                    <div id="game-status">Waiting for players...</div>
+                </div>
+                <div class="actions">
+                    <button id="leave-game-btn" class="btn secondary-btn">Leave Game</button>
+                </div>
+            </header>
+
+            <div class="game-content">
+                <div class="players-section">
+                    <h2>Players</h2>
+                    <div id="players-list" class="players-list">
+                        <!-- Players will be populated here -->
+                    </div>
+                </div>
+
+                <div class="game-board">
+                    <div id="waiting-screen" class="game-state">
+                        <h2>Waiting for more players...</h2>
+                        <div id="player-count">
+                            <span id="current-players">1</span>/<span id="min-required-players">2</span> players
+                        </div>
+                        <button id="start-game-btn" class="btn primary-btn hidden">Start Game</button>
+                    </div>
+
+                    <div id="question-phase" class="game-state hidden">
+                        <div class="question-header">
+                            <h2>Question <span id="current-question-num">1</span>/<span id="total-questions">5</span></h2>
+                            <div id="timer" class="timer">60s</div>
+                        </div>
+                        
+                        <div class="question-card">
+                            <p id="current-question">How many cars were sold worldwide in 2023?</p>
+                            
+                            <div class="guess-input-container">
+                                <div class="guess-input-group">
+                                    <label for="lower-bound">Lower Bound</label>
+                                    <input type="number" id="lower-bound" placeholder="Minimum value">
+                                </div>
+                                <div class="guess-input-group">
+                                    <label for="upper-bound">Upper Bound</label>
+                                    <input type="number" id="upper-bound" placeholder="Maximum value">
+                                </div>
+                            </div>
+                            
+                            <button id="submit-guess-btn" class="btn primary-btn">Submit Guess</button>
+                        </div>
+
+                        <!-- Meta-game prediction (if enabled) -->
+                        <div id="meta-game-prediction" class="meta-game hidden">
+                            <h3>Meta-Game Prediction</h3>
+                            <p>Who do you think will win this hand?</p>
+                            <select id="winner-prediction">
+                                <option value="">Select a player</option>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                            <button id="submit-prediction-btn" class="btn secondary-btn">Submit Prediction</button>
+                        </div>
+                    </div>
+
+                    <div id="betting-phase" class="game-state hidden">
+                        <div class="betting-header">
+                            <h2>Betting Round <span id="betting-round">1</span></h2>
+                            <div id="pot-amount" class="pot">Pot: 0 chips</div>
+                        </div>
+
+                        <div class="hints-container">
+                            <div id="hint-1" class="hint">
+                                <h3>Hint 1</h3>
+                                <p id="hint-1-text" class="hint-text hidden">This is the first hint.</p>
+                            </div>
+                            <div id="hint-2" class="hint">
+                                <h3>Hint 2</h3>
+                                <p id="hint-2-text" class="hint-text hidden">This is the second hint.</p>
+                            </div>
+                        </div>
+
+                        <div class="guesses-container">
+                            <h3>Current Guesses</h3>
+                            <div id="guesses-list" class="guesses-list">
+                                <!-- Guesses will be populated here -->
+                            </div>
+                        </div>
+
+                        <div id="betting-actions" class="betting-actions">
+                            <div class="betting-info">
+                                <div>Current Bet: <span id="current-bet">0</span> chips</div>
+                                <div>Your Chips: <span id="player-chips">1000</span></div>
+                            </div>
+                            <div class="actions-buttons">
+                                <button id="fold-btn" class="btn danger-btn">Fold</button>
+                                <button id="call-btn" class="btn secondary-btn">Call</button>
+                                <div class="raise-controls">
+                                    <input type="range" id="raise-slider" min="0" max="1000" value="0">
+                                    <input type="number" id="raise-amount" min="0" max="1000" value="0">
+                                    <button id="raise-btn" class="btn primary-btn">Raise</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="reveal-phase" class="game-state hidden">
+                        <h2>Answer Reveal</h2>
+                        
+                        <div class="answer-card">
+                            <p>The correct answer is: <span id="correct-answer" class="highlight">78.6 million</span></p>
+                            
+                            <div id="winner-announcement" class="winner-announcement">
+                                <h3><span id="winner-name">Player 1</span> wins the pot!</h3>
+                                <p>Winning range: <span id="winning-range">70M - 80M</span></p>
+                            </div>
+                        </div>
+
+                        <div class="all-guesses-results">
+                            <h3>All Guesses</h3>
+                            <div id="all-guesses-list" class="all-guesses-list">
+                                <!-- All guesses with results will be shown here -->
+                            </div>
+                        </div>
+
+                        <button id="next-question-btn" class="btn primary-btn">Next Question</button>
+                    </div>
+
+                    <div id="game-over" class="game-state hidden">
+                        <h2>Game Over!</h2>
+                        
+                        <div class="final-standings">
+                            <h3>Final Standings</h3>
+                            <div id="final-standings-list" class="final-standings-list">
+                                <!-- Final standings will be shown here -->
+                            </div>
+                        </div>
+
+                        <div class="game-over-actions">
+                            <button id="return-to-lobby-btn" class="btn secondary-btn">Return to Lobby</button>
+                            <button id="play-again-btn" class="btn primary-btn">Play Again</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-section">
+                    <h2>Chat</h2>
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Chat messages will appear here -->
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Type a message...">
+                        <button id="send-chat-btn"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/lobby.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/game_actions.js"></script>
+    <script src="js/player_actions.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
